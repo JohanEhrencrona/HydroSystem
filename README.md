@@ -1,2 +1,0 @@
-# HydroSystem
-Automatic Irrigation System
