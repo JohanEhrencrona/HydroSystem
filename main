@@ -43,9 +43,5 @@ def SprinklerValue(timePeriod):
     SprinklerValue = SprinklerValue - 0.5
   if AverageWeather('pmean',timePeriod)>0.2:
     SprinklerValue = 0
-  print("Average Temperature: " + str(AverageWeather('t',timePeriod)) + " degrees")
-  print("Average Air Humidity: " + str(AverageWeather('r',timePeriod)) + "%")
-  print("Average Precipitation: " + str(AverageWeather('pmean',timePeriod)) + "mm")
-  print("Average Wind Speed: " + str(AverageWeather('ws',timePeriod)) + " m/s")
   return SprinklerValue
 
