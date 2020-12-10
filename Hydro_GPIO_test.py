@@ -1,9 +1,10 @@
 import sys
-import random
-#from graphics import *
 import time
 import RPi.GPIO as GPIO         #import IO module
-print("GPIO version = ", GPIO.VERSION)
+from flask import Flask
+from flask import jsonify
+from requests import get
+import json
 
 #initiate IO Module
 GPIO.setmode(GPIO.BCM)          #set pin numbering according to broadcom chip
@@ -20,15 +21,54 @@ GPIO.setup(27, GPIO.IN)          #GPIO no 26 assigned as input
 GPIO.setup(17, GPIO.IN)          #GPIO no 26 assigned as input
 GPIO.setup(4, GPIO.IN)          #GPIO no 26 assigned as input
 
-#assign constant values to variables
-ON = 0
-OFF = 1
-FIRST_PORT  =0
-LAST_PORT = (len(ports))           # CHECK LOOPS WHERE I USE LAST_PORT
-print("last port is", LAST_PORT)
-NOT_PRESSED = False
-PRESSED = True
 
+
+
+
+#Execute Main Program
+app = Flask(__name__)
+
+
+
+@app.route("/")
+def main():
+    while True:
+    if (GPIO.input(22)==False):
+        blink(sprinklerValue(12))
+        sprinklerValue = str("Calculated sprinkler value is: "+ str(SprinklerValue(12)))
+        temperature = str("Average Temperature: " + str(AverageWeather('t',12)) + " degrees")
+        humidity = str("Average Air Humidity: " + str(AverageWeather('r',12)) + "%")
+        windSpeed = str("Average Wind Speed: " + str(AverageWeather('ws',12)) + " m/s")
+        precipitation = str("Average Precipitation: " + str(AverageWeather('pmean',12)) + "mm")
+        return jsonify(sprinklerValue, temperature, humidity, windSpeed, precipitation)
+    else: 
+        return ""
+    
+
+url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/16.158/lat/58.5812/data.json'
+weatherData = get(url).json()['timeSeries']
+
+def AverageWeather(name, timePeriod):
+  nestedObjects = 18
+  weatherValue = 0
+  for i in range(timePeriod):
+    for j in range(nestedObjects):
+      if (weatherData[i]['parameters'][j]['name'] == name):
+        weatherValue = weatherValue+(weatherData[i]['parameters'][j]['values'][0])
+  return (weatherValue/timePeriod)
+
+
+def SprinklerValue(timePeriod):
+  SprinklerValue = 1
+  if AverageWeather('r',timePeriod)>65:
+    SprinklerValue = SprinklerValue - 0.25
+  if AverageWeather('t',timePeriod)>24:
+    SprinklerValue = SprinklerValue + 0.25
+  if AverageWeather('ws',timePeriod)>8:
+    SprinklerValue = SprinklerValue - 0.5
+  if AverageWeather('pmean',timePeriod)>0.2:
+    SprinklerValue = 0
+  return SprinklerValue
 
 def blink(sprinklerValue):
     blink_amount = round((sprinklerValue)*10)
@@ -36,26 +76,7 @@ def blink(sprinklerValue):
         GPIO.output(18, GPIO.HIGH)
         time.sleep(1)
         GPIO.output(18, GPIO.LOW)
-
-
-
-def soil_is_moist():
-    print("soil is moist")
-
-
-
-#Execute Main Program
-
-while True:
-    if (GPIO.input(22)==False):
-        blink(0.3)
-    
-    
-
-
-
-
-
+        
 GPIO.cleanup()                  #close all output ports
 
 
