@@ -1,6 +1,7 @@
 import sys
 import random
-from time import sleep
+#from graphics import *
+import time
 import RPi.GPIO as GPIO         #import IO module
 print("GPIO version = ", GPIO.VERSION)
 
@@ -29,49 +30,29 @@ NOT_PRESSED = False
 PRESSED = True
 
 
-   
-  
+def blink(sprinklerValue):
+    blink_amount = round((sprinklerValue)*10)
+    for i in range(blink_amount):
+        GPIO.output(18, GPIO.HIGH)
+        time.sleep(1)
+        GPIO.output(18, GPIO.LOW)
 
-#function that turn one lights on or off
-def turn_one_light(x, i):
-    if (x == ON):
-        GPIO.output(ports[i], GPIO.HIGH)
-    else:
-        GPIO.output(ports[i], GPIO.LOW)
-   
-               
-#function for setting button pressed +++++ GLOBAL VARIABLES ++++++
-def set_button_pressed(channel):
-    global button
-    global eventport
-    button = PRESSED
-    eventport = channel
-    print("EVENT DETECTED ON PORT:", eventport)
 
-    
 
-#Initiate Main Program
-TIME1 = 0.5
-TIME2 = 0.3
-turn_all_lights(OFF)
-button = NOT_PRESSED
-GPIO.add_event_detect(22, GPIO.FALLING, callback=set_button_pressed, bouncetime = 300) #interrupt detection
-GPIO.add_event_detect(27, GPIO.FALLING, callback=set_button_pressed, bouncetime = 300) #interrupt detection
-GPIO.add_event_detect(17, GPIO.FALLING, callback=set_button_pressed, bouncetime = 300) #interrupt detection
-GPIO.add_event_detect(4, GPIO.FALLING, callback=set_button_pressed, bouncetime = 300) #interrupt detection
+def soil_is_moist():
+    print("soil is moist")
+
+
 
 #Execute Main Program
 
-while button == NOT_PRESSED:
-    blink_all_lights_one_by_one()
-blink_all_lights_same_time()
+while True:
+    if (GPIO.input(22)==False):
+        blink(0.3)
+    
+    
 
-selection=input_data()
-print(selection)
 
-turn_all_lights(ON)
-
-blink_random(1)
 
 
 
