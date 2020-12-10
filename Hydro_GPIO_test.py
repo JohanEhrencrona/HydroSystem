@@ -79,5 +79,6 @@ def blink(sprinklerValue):
         
 GPIO.cleanup()                  #close all output ports
 
-
+if __name__== '__main__':
+    app.run()
 
