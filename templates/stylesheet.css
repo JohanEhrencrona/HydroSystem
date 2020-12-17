@@ -1,0 +1,27 @@
+body {
+    background: #fffffc;
+    color: black;
+    font: San Fransisco;
+    font-size:14px;
+    word-spacing: 3px;
+    text-align: center;
+}
+/--Headline in body--/
+body h3{
+    font: San Fransisco;
+    padding: 5px;
+    text-align: center;
+}
+body p{
+    font
+
+}
+/--Headline in top row--/
+.container-fluid h3{
+    padding: 10px;
+}
+/--Paragraph in top row--/
+.container-fluid p{
+
+    font-size: 15px;
+}

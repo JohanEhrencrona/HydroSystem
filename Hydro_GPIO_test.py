@@ -1,120 +1,40 @@
 import sys
 import time
 import RPi.GPIO as GPIO         #import IO module
-from flask import Flask
-from flask import render_template
-from flask import jsonify
+from flask import Flask, render_template
 from requests import get
 import json
-from flask_socketio import SocketIO
-
+import datetime
 
 
 #Execute Main Program
 app = Flask(__name__)
-
-
-
-
 url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/13.929/lat/55.473/data.json'
 weatherData = get(url).json()['timeSeries']
 
-
-
-
 @app.route('/')
 def index():
+    now = datetime.datetime.now()
     initiate_GPIO()
-    moistureZone1 = {
-        'buttonPress': soilMoistureZone1()
+    field1 = Field("Corn",22,18,0.1,0.25,0.5,0.4)
+    field2 = Field("Potato",27,23,0.15,0.25,0,0.1)
+    field3 = Field("Tomato",17,24,0.35,0.35,0.5,0.15)
+    field4 = Field("Carrot",4,25,0.2,0.25,0,0.1)
+    
+    weather ={
+        'temperature': round(AverageWeather('t',12),2),
+        'humidity': round(AverageWeather('r',12),2),
+        'windSpeed': round(AverageWeather('ws',12),2),
+        'precipitation': round(AverageWeather('pmean',12),2),
+        'time': now.strftime("%Y-%m-%d %H:%M:%S")
         }
-    weatherZone1 ={
-        'temperature': AverageWeather('t',12),
-        'humidity': AverageWeather('r',12),
-        'windSpeed': AverageWeather('ws',12),
-        'precipitation': AverageWeather('pmean',12),
-        'sprinklerValue': SprinklerValueZone1(12)
-        }
-    moistureZone2 = {
-        'buttonPress': soilMoistureZone2()
-        }
-    weatherZone2 ={
-        'temperature': AverageWeather('t',12),
-        'humidity': AverageWeather('r',12),
-        'windSpeed': AverageWeather('ws',12),
-        'precipitation': AverageWeather('pmean',12),
-        'sprinklerValue': SprinklerValueZone2(12)
-        }
-    moistureZone3 = {
-        'buttonPress': soilMoistureZone3()
-        }
-    weatherZone3 ={
-        'temperature': AverageWeather('t',12),
-        'humidity': AverageWeather('r',12),
-        'windSpeed': AverageWeather('ws',12),
-        'precipitation': AverageWeather('pmean',12),
-        'sprinklerValue': SprinklerValueZone3(12)
-        }
-    moistureZone4 = {
-        'buttonPress': soilMoistureZone4()
-        }
-    weatherZone4 ={
-        'temperature': AverageWeather('t',12),
-        'humidity': AverageWeather('r',12),
-        'windSpeed': AverageWeather('ws',12),
-        'precipitation': AverageWeather('pmean',12),
-        'sprinklerValue': SprinklerValueZone4(12)
-        }
-    return render_template('index.html', weatherZone1 = weatherZone1, moistureZone1 = moistureZone1, weatherZone2 = weatherZone2, moistureZone2 = moistureZone2, weatherZone3 = weatherZone3, moistureZone3 = moistureZone3, weatherZone4 = weatherZone4, moistureZone4 = moistureZone4)
 
-
-def soilMoistureZone1():
-    while True:
-        if (GPIO.input(22)==False):
-            GPIO.output(18, GPIO.HIGH)
-            time.sleep(0.6)
-            GPIO.output(18, GPIO.LOW)
-            return "Soil dry"
-            time.sleep(2)
-        if (GPIO.input(22)==True):
-            return "Soil moist"
-        time.sleep(2)
-def soilMoistureZone2():
-    while True:
-        if (GPIO.input(27)==False):
-            GPIO.output(23, GPIO.HIGH)
-            time.sleep(0.6)
-            GPIO.output(23, GPIO.LOW)
-            return "Soil dry"
-            time.sleep(2)
-        if (GPIO.input(27)==True):
-            return "Soil moist"
-        time.sleep(2)
-
-def soilMoistureZone3():
-    while True:
-        if (GPIO.input(17)==False):
-            GPIO.output(24, GPIO.HIGH)
-            time.sleep(0.6)
-            GPIO.output(24, GPIO.LOW)
-            return "Soil dry"
-            time.sleep(2)
-        if (GPIO.input(17)==True):
-            return "Soil moist"
-        time.sleep(2)
-
-def soilMoistureZone4():
-    while True:
-        if (GPIO.input(4)==False):
-            GPIO.output(25, GPIO.HIGH)
-            time.sleep(0.6)
-            GPIO.output(25, GPIO.LOW)
-            return "Soil dry"
-            time.sleep(2)
-        if (GPIO.input(4)==True):
-            return "Soil moist"
-        time.sleep(2)
-
+    field1 = field1.getValues()
+    field2 = field2.getValues()
+    field3 = field3.getValues()
+    field4 = field4.getValues()
+    
+    return render_template('index.html', weather = weather, field1 = field1, field2 = field2, field3 = field3, field4 = field4)
 
 def initiate_GPIO():
     #initiate IO Module
@@ -131,8 +51,6 @@ def initiate_GPIO():
     GPIO.setup(17, GPIO.IN)          #GPIO no 26 assigned as input
     GPIO.setup(4, GPIO.IN)          #GPIO no 26 assigned as input
     
-
-
 def AverageWeather(name, timePeriod):
   nestedObjects = 18
   weatherValue = 0
@@ -142,85 +60,56 @@ def AverageWeather(name, timePeriod):
         weatherValue = weatherValue+(weatherData[i]['parameters'][j]['values'][0])
   return (weatherValue/timePeriod)
 
+class Field:
+    def __init__(self, name, sensor, LED, rainResistance, temperatureResistance, windResistance, humidityResistance):
+        self.name = name
+        self.sensor = sensor
+        self.LED = LED
+        self.rainResistance = rainResistance
+        self.temperatureResistance = temperatureResistance
+        self.windResistance = windResistance
+        self.humidityResistance = humidityResistance
+    
+    def getValues(self):
+        values = {
+        'name': self.name,
+        'moisture': self.soilMoisture(),
+        'sprinklerValue': self.sprinklerValue(12)
+        }
+        return values
 
-def SprinklerValueZone1(timePeriod):
-    ##Tomatoe
-  SprinklerValue = 1
+    def soilMoisture(self):
+        if (GPIO.input(self.sensor)==False):
+            GPIO.output(self.LED, GPIO.HIGH)
+            time.sleep(1)
+            GPIO.output(self.LED, GPIO.LOW)
+            time.sleep(1)
+            return "Soil dry"
+        if (GPIO.input(self.sensor)==True):
+            return "Soil wet"
+            time.sleep(1)
 
-  if AverageWeather('r',timePeriod)>65:
-      SprinklerValue = SprinklerValue - 0.25
-  if AverageWeather('t',timePeriod)>24:
-      SprinklerValue = SprinklerValue + 0.25
-  if AverageWeather('ws',timePeriod)>8:
-      SprinklerValue = SprinklerValue - 0.5
-  if AverageWeather('pmean',timePeriod)>0.2:
-      SprinklerValue = 0
-  if soilMoistureZone1() == 'Soil moist':
-      SprinklerValue = 0
-  return SprinklerValue
-
-def SprinklerValueZone2(timePeriod):
-    ##Potatoe
-  SprinklerValue = 1
-
-  if AverageWeather('r',timePeriod)>65:
-      SprinklerValue = SprinklerValue - 0.25
-  if AverageWeather('t',timePeriod)>2:
-      SprinklerValue = SprinklerValue + 0.25
-  if AverageWeather('ws',timePeriod)>8:
-      SprinklerValue = SprinklerValue - 0.5
-  if AverageWeather('pmean',timePeriod)>0.5:
-      SprinklerValue = 0
-  if soilMoistureZone2() == 'Soil moist':
-      SprinklerValue = 0
-  return SprinklerValue
-
-def SprinklerValueZone3(timePeriod):
-    #Carrot
-  SprinklerValue = 1
-
-  if AverageWeather('r',timePeriod)>65:
-      SprinklerValue = SprinklerValue - 0.25
-  if AverageWeather('t',timePeriod)>24:
-      SprinklerValue = SprinklerValue + 0.25
-  if AverageWeather('ws',timePeriod)>8:
-      SprinklerValue = SprinklerValue - 0.5
-  if AverageWeather('pmean',timePeriod)>0.5:
-      SprinklerValue = 0
-  if soilMoistureZone3() == 'Soil moist':
-      SprinklerValue = 0
-  return SprinklerValue
-
-def SprinklerValueZone4(timePeriod):
-    ##Corn
-  SprinklerValue = 1
-
-  if AverageWeather('r',timePeriod)>65:
-      SprinklerValue = SprinklerValue - 0.25
-  if AverageWeather('t',timePeriod)>24:
-      SprinklerValue = SprinklerValue + 0.25
-  if AverageWeather('ws',timePeriod)>8:
-      SprinklerValue = SprinklerValue - 0.5
-  if AverageWeather('pmean',timePeriod)>0.2:
-      SprinklerValue = 0
-  if soilMoistureZone4() == 'Soil moist':
-      SprinklerValue = 0
-  return SprinklerValue
-
-def blink(sprinklerValue):
-    blink_amount = round((sprinklerValue)*10)
-    for i in range(blink_amount):
-        GPIO.output(18, GPIO.HIGH)
-        print("gh")
-        time.sleep(0.6)
-        GPIO.output(18, GPIO.LOW)
-        print("bbbbb")
-    return ""
-        
-        
+    def sprinklerValue(self, timePeriod):
+        SprinklerValue = 1
+        if AverageWeather('r',timePeriod)>65:
+            SprinklerValue = SprinklerValue - self.humidityResistance
+        if AverageWeather('t',timePeriod)>24:
+            SprinklerValue = SprinklerValue - self.temperatureResistance
+        if AverageWeather('ws',timePeriod)>8:
+            SprinklerValue = SprinklerValue - self.windResistance
+        if AverageWeather('pmean',timePeriod)>self.rainResistance:
+            SprinklerValue = 0
+        if self.soilMoisture() == 'Soil wet':
+            SprinklerValue = 0
+        if SprinklerValue<0:
+            SprinklerValue = 0
+        if SprinklerValue>1:
+            SprinklerValue = 1
+        return SprinklerValue
+ 
 
 if __name__ == "__main__":
-    app.run(ssl_context='adhoc')
+    app.run(host='0.0.0.0') ##ssl_context='adhoc'
             
 
 

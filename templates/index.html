@@ -1,36 +1,64 @@
-<html>
-<meta http-equiv="refresh" content="1">
+<!DOCTYPE html>
+<html lang="eng">
+<link rel="stylesheet" type="text/css" href="stylesheet.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
  <head>
+ <meta http-equiv="refresh" content="1">
  </head>
  <body>
-   <h1>Welcome To the Hydro Automation Project<h1>
-   <h2>Moisture: {{moistureZone1.buttonPress}}</h2>
-   <h2>Temperature: {{weatherZone1.temperature}}</h2>
-   <h2>Humidity: {{weatherZone1.humidity}}</h2>
-   <h2>Wind Speed: {{weatherZone1.windSpeed}}</h2>
-   <h2>Precipitation: {{weatherZone1.precipitation}}</h2>
-   <h2>Sprinkler Value: {{weatherZone1.sprinklerValue}}</h2>
+	<div class="p-3 mb-2 bg-dark text-white">
+	<!-- Top row -->        
+        <div class="row">
+            <div class="col" style="background-color:# white">
 
-   <h2>Moisture: {{moistureZone2.buttonPress}}</h2>
-   <h2>Temperature: {{weatherZone2.temperature}}</h2>
-   <h2>Humidity: {{weatherZone2.humidity}}</h2>
-   <h2>Wind Speed: {{weatherZone2.windSpeed}}</h2>
-   <h2>Precipitation: {{weatherZone2.precipitation}}</h2>
-   <h2>Sprinkler Value: {{weatherZone2.sprinklerValue}}</h2>
-   
-   <h2>Moisture: {{moistureZone3.buttonPress}}</h2>
-   <h2>Temperature: {{weatherZone3.temperature}}</h2>
-   <h2>Humidity: {{weatherZone3.humidity}}</h2>
-   <h2>Wind Speed: {{weatherZone3.windSpeed}}</h2>
-   <h2>Precipitation: {{weatherZone3.precipitation}}</h2>
-   <h2>Sprinkler Value: {{weatherZone3.sprinklerValue}}</h2>
-   
-   <h2>Moisture: {{moistureZone4.buttonPress}}</h2>
-   <h2>Temperature: {{weatherZone4.temperature}}</h2>
-   <h2>Humidity: {{weatherZone4.humidity}}</h2>
-   <h2>Wind Speed: {{weatherZone4.windSpeed}}</h2>
-   <h2>Precipitation: {{weatherZone4.precipitation}}</h2>
-   <h2>Sprinkler Value: {{weatherZone4.sprinklerValue}}</h2>
+                <center><h1>Welcome To the Hydro Automation Project<h1></center>
+				<center><h2>Temperature: {{weather.temperature}}°C</h2></center>
+				<center><h2>Humidity: {{weather.humidity}}%</h2></center>
+				<center><h2>Wind Speed: {{weather.windSpeed}}m/s</h2></center>
+				<center><h2>Precipitation: {{weather.precipitation}}mm</h2></center>
+                                <center><h2>Time: {{weather.time}}</h2></center>
 
+            </div>
+        </div>
+		
+		<div class="row">
+			<div class=col-12 col-xs-6" id="rutor" style="background-color:">
+				
+		
+		<div class="card bg-secondary text-light">
+            <div class="card-body">
+				<center><h2>Crop: {{field1.name}}</h2></center>
+				<center><h2>Moisture: {{field1.moisture}}</h2></center>
+				<center><h2>Sprinkler Value: {{field1.sprinklerValue}}</h2></center>
+			</div>
+		</div>
+		
+		<div class="card bg-secondary text-light">
+            <div class="card-body">
+				<center><h2>Crop: {{field2.name}}</h2></center>
+				<center><h2>Moisture: {{field2.moisture}}</h2></center>
+				<center><h2>Sprinkler Value: {{field2.sprinklerValue}}</h2></center>
+			</div>
+		</div>
+		
+		
+		<div class="card bg-secondary text-light">
+            <div class="card-body">
+				<center><h2>Crop: {{field3.name}}</h2></center>
+				<center><h2>Moisture: {{field3.moisture}}</h2></center>
+				<center><h2>Sprinkler Value: {{field3.sprinklerValue}}</h2></center>
+			</div>
+		</div>
+		
+		<div class="card bg-secondary text-light">
+            <div class="card-body">
+				<center><h2>Crop: {{field4.name}}</h2></center>
+				<center><h2>Moisture: {{field4.moisture}}</h2></center>
+				<center><h2>Sprinkler Value: {{field4.sprinklerValue}}</h2></center>
+			</div>
+		</div>
+	
+	</div>
+	
  </body>
 </html>
