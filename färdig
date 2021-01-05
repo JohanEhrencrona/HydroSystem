@@ -1,0 +1,125 @@
+import sys
+import time
+import RPi.GPIO as GPIO         #import IO module
+from flask import Flask, render_template
+from requests import get
+import json
+import datetime
+
+
+#Execute Main Program
+app = Flask(__name__)
+url = 'https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/13.929/lat/55.473/data.json'
+weatherData = get(url).json()['timeSeries']
+
+@app.route('/')
+def index():
+    now = datetime.datetime.now()
+    initiate_GPIO()
+    field1 = Field("Corn",22,18,0.1,0.25,0.5,0.4)
+    field2 = Field("Potato",27,23,0.15,0.25,0,0.1)
+    field3 = Field("Tomato",17,24,0.35,0.35,0.5,0.15)
+    field4 = Field("Carrot",4,25,0.2,0.25,0,0.1)
+    
+    weather ={
+        'temperature': round(AverageWeather('t',12),2),
+        'humidity': round(AverageWeather('r',12),2),
+        'windSpeed': round(AverageWeather('ws',12),2),
+        'precipitation': round(AverageWeather('pmean',12),2),
+        'time': now.strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+    field1 = field1.getValues()
+    field2 = field2.getValues()
+    field3 = field3.getValues()
+    field4 = field4.getValues()
+    
+    return render_template('index.html', weather = weather, field1 = field1, field2 = field2, field3 = field3, field4 = field4)
+
+def initiate_GPIO():
+    #initiate IO Module
+    GPIO.setmode(GPIO.BCM)          #set pin numbering according to broadcom chip
+    GPIO.setwarnings(False)         #turn off warnings
+    #assign IO ports
+    GPIO.setup(18, GPIO.OUT)         #GPIO assign output
+    GPIO.setup(23, GPIO.OUT)
+    GPIO.setup(24, GPIO.OUT)
+    GPIO.setup(25, GPIO.OUT)
+    ports =[18, 23, 24, 25]   #string with the output port numbers
+    GPIO.setup(22, GPIO.IN)          #GPIO no 26 assigned as input
+    GPIO.setup(27, GPIO.IN)          #GPIO no 26 assigned as input
+    GPIO.setup(17, GPIO.IN)          #GPIO no 26 assigned as input
+    GPIO.setup(4, GPIO.IN)          #GPIO no 26 assigned as input
+    
+def AverageWeather(name, timePeriod):
+  nestedObjects = 18
+  weatherValue = 0
+  for i in range(timePeriod):
+    for j in range(nestedObjects):
+      if (weatherData[i]['parameters'][j]['name'] == name):
+        weatherValue = weatherValue+(weatherData[i]['parameters'][j]['values'][0])
+  return (weatherValue/timePeriod)
+
+class Field:
+    def __init__(self, name, sensor, LED, rainResistance, temperatureResistance, windResistance, humidityResistance):
+        self.name = name
+        self.sensor = sensor
+        self.LED = LED
+        self.rainResistance = rainResistance
+        self.temperatureResistance = temperatureResistance
+        self.windResistance = windResistance
+        self.humidityResistance = humidityResistance
+    
+    def getValues(self):
+        values = {
+        'name': self.name,
+        'moisture': self.soilMoisture(),
+        'sprinklerValue': self.sprinklerValue(12)
+        }
+        return values
+
+    def soilMoisture(self):
+        if (GPIO.input(self.sensor)==False):
+            return "Soil wet"
+        if (GPIO.input(self.sensor)==True):
+            return "Soil dry"
+        
+
+    def sprinklerValue(self, timePeriod):
+        SprinklerValue = 1
+        if AverageWeather('r',timePeriod)>65:
+            SprinklerValue = SprinklerValue - self.humidityResistance
+        if AverageWeather('t',timePeriod)>24:
+            SprinklerValue = SprinklerValue - self.temperatureResistance
+        if AverageWeather('ws',timePeriod)>8:
+            SprinklerValue = SprinklerValue - self.windResistance
+        if AverageWeather('pmean',timePeriod)>self.rainResistance:
+            SprinklerValue = 0
+        if SprinklerValue<0:
+            SprinklerValue = 0
+        if SprinklerValue>1:
+            SprinklerValue = 1
+        if (GPIO.input(self.sensor)==True):
+            blink_amount = round((SprinklerValue)*5)
+            for i in range(blink_amount):
+                GPIO.output(self.LED, GPIO.HIGH)
+                time.sleep(0.3)
+                GPIO.output(self.LED, GPIO.LOW)
+                time.sleep(0.3)
+        if (GPIO.input(self.sensor)==False):
+            SprinklerValue = 0
+        return SprinklerValue
+
+    
+
+
+    
+        
+ 
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0') ##ssl_context='adhoc'
+            
+
+
+
